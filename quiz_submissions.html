@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biology Quiz Challenge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10+ */
+            user-select: none; /* Standard syntax */
+        }
+        .quiz-container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .answer-btn {
+            transition: all 0.2s ease;
+        }
+        .answer-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .answer-btn.selected {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+            border-color: #3b82f6;
+        }
+        .progress-bar-inner {
+            transition: width 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Warning Overlay for Tab Switching -->
+    <div id="warning-overlay" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white p-8 rounded-lg shadow-xl text-center max-w-sm">
+            <h2 class="text-2xl font-bold text-red-600 mb-4">Warning!</h2>
+            <p id="warning-text" class="text-slate-700">Leaving the quiz tab is not allowed. Please return to the quiz immediately.</p>
+        </div>
+    </div>
+
+    <div class="quiz-container w-full bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+
+        <!-- Start Screen -->
+        <div id="start-screen">
+            <h1 class="text-3xl sm:text-4xl font-bold text-center mb-4 text-slate-900">Biology Quiz Challenge</h1>
+            <p class="text-center text-slate-600 mb-6">Test your knowledge in Biology.</p>
+            <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg mb-8">
+                <h3 class="font-bold mb-2">Quiz Rules:</h3>
+                <ul class="list-disc list-inside text-sm">
+                    <li>You will have <span class="font-bold">30 minutes</span> to complete all 30 questions.</li>
+                    <li>The quiz is designed to be taken in a single session without external help.</li>
+                    <li><span class="font-bold text-red-600">Switching tabs or minimizing the window is not allowed.</span> Doing so multiple times will end the quiz.</li>
+                    <li>Copy and paste functions are disabled.</li>
+                </ul>
+            </div>
+            <div class="space-y-4 mb-6">
+                 <div>
+                    <label for="name-input" class="block text-sm font-medium text-slate-700 mb-1">Enter your name:</label>
+                    <input type="text" id="name-input" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Your Name">
+                </div>
+                <div>
+                    <label for="email-input" class="block text-sm font-medium text-slate-700 mb-1">Enter your email:</label>
+                    <input type="email" id="email-input" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="example@email.com">
+                </div>
+                <div>
+                    <label for="whatsapp-input" class="block text-sm font-medium text-slate-700 mb-1">Enter your WhatsApp Number:</label>
+                    <input type="tel" id="whatsapp-input" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="+1234567890">
+                </div>
+                <div>
+                    <label for="qualifications-input" class="block text-sm font-medium text-slate-700 mb-1">Enter your Qualifications:</label>
+                    <input type="text" id="qualifications-input" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., B.Sc. in Biology">
+                </div>
+            </div>
+             <div class="flex items-center mt-6 mb-6">
+                <input id="honor-code" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                <label for="honor-code" class="ml-3 block text-sm text-slate-900">I agree to take this quiz without any external help.</label>
+            </div>
+            <button id="start-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors text-lg disabled:bg-slate-400 disabled:cursor-not-allowed" disabled>
+                Start the Quiz!
+            </button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-4">
+                <div id="timer" class="text-xl font-bold bg-slate-200 text-slate-800 px-4 py-2 rounded-lg">30:00</div>
+                <div class="text-lg font-semibold">Question <span id="question-number">1</span> of 30</div>
+            </div>
+            
+            <!-- Question -->
+            <h2 id="question-text" class="text-2xl font-semibold mb-6 min-h-[100px]">Question text goes here...</h2>
+            
+            <!-- Answers -->
+            <div id="answer-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Answer buttons will be dynamically inserted here -->
+            </div>
+            
+            <!-- Navigation -->
+            <div class="mt-8 flex justify-between items-center">
+                <button id="prev-btn" class="bg-slate-300 text-slate-800 font-bold py-2 px-6 rounded-lg hover:bg-slate-400 transition-colors">Previous</button>
+                <div id="progress-dots" class="flex gap-1.5"></div>
+                <button id="next-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors">Next</button>
+                <button id="submit-btn" class="hidden bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors">Submit</button>
+            </div>
+        </div>
+        
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden text-center">
+            <h2 class="text-3xl font-bold mb-4 text-slate-900">Quiz Complete!</h2>
+            <p class="text-lg text-slate-600 mb-6">Your results have been submitted.</p>
+            <div class="bg-slate-100 p-8 rounded-xl inline-block">
+                <div id="score-text" class="text-5xl font-bold text-blue-600"></div>
+                <p class="text-slate-700 mt-2">Correct Answers</p>
+            </div>
+            <div id="time-taken" class="mt-6 text-slate-500"></div>
+            <button id="restart-btn" class="mt-8 w-full sm:w-auto bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors text-lg">
+                Try Again
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // --- Firebase Setup ---
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "DEMO", authDomain: "DEMO", projectId: "DEMO" };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-quiz-app';
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        setLogLevel('debug');
+
+        // Sign in the user
+        (async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                console.log("Firebase authentication complete.");
+            } catch (error) {
+                console.error("Firebase Auth Error:", error);
+            }
+        })();
+        // --- End Firebase Setup ---
+
+        const quizData = [
+            // ... (30 questions remain here as before) ...
+            // Microbiology
+            { question: "Which component is found in the cell walls of Gram-positive bacteria but is much thicker than in Gram-negative bacteria?", answers: ["Lipopolysaccharide", "Peptidoglycan", "Mycolic acid", "Chitin"], correct: "Peptidoglycan" },
+            { question: "In which phase of the bacterial growth curve are the bacteria adapting to their new environment and not yet dividing?", answers: ["Log Phase", "Death Phase", "Stationary Phase", "Lag Phase"], correct: "Lag Phase" },
+            { question: "What is the primary function of a bacterial endospore?", answers: ["Reproduction", "Movement", "Survival in harsh conditions", "Storing energy"], correct: "Survival in harsh conditions" },
+            { question: "A key difference between viruses and bacteria is that viruses are:", answers: ["Eukaryotic", "Prokaryotic", "Acellular", "Multicellular"], correct: "Acellular" },
+            { question: "What small, circular pieces of DNA, often carrying genes for antibiotic resistance, are found in bacteria?", answers: ["Chromosomes", "Plasmids", "Ribosomes", "Nucleoids"], correct: "Plasmids" },
+            { question: "Which technique is fundamental in microbiology for preventing contamination of cultures?", answers: ["Centrifugation", "Aseptic technique", "Gram staining", "PCR"], correct: "Aseptic technique" },
+            { question: "The tail-like appendage that many bacteria use for movement is called a:", answers: ["Pilus", "Cilia", "Flagellum", "Capsule"], correct: "Flagellum" },
+            { question: "Microbes that are adapted to live in extremely hot environments are known as:", answers: ["Halophiles", "Psychrophiles", "Thermophiles", "Acidophiles"], correct: "Thermophiles" },
+            { question: "The process of bacterial cell division, where one cell splits into two identical daughter cells, is called:", answers: ["Meiosis", "Mitosis", "Binary Fission", "Budding"], correct: "Binary Fission" },
+            { question: "Who is often called the 'Father of Microbiology' for his work with microscopes?", answers: ["Louis Pasteur", "Robert Koch", "Alexander Fleming", "Antonie van Leeuwenhoek"], correct: "Antonie van Leeuwenhoek" },
+            // Biochemistry
+            { question: "What molecule is considered the primary 'energy currency' of the cell?", answers: ["Glucose", "ATP (Adenosine Triphosphate)", "DNA", "NADPH"], correct: "ATP (Adenosine Triphosphate)" },
+            { question: "Enzymes increase the rate of a chemical reaction by doing what?", answers: ["Increasing the temperature", "Increasing the substrate concentration", "Lowering the activation energy", "Changing the reaction's equilibrium"], correct: "Lowering the activation energy" },
+            { question: "The linear sequence of amino acids in a polypeptide chain is referred to as its:", answers: ["Primary structure", "Secondary structure", "Tertiary structure", "Quaternary structure"], correct: "Primary structure" },
+            { question: "The Central Dogma of molecular biology describes the flow of genetic information as:", answers: ["RNA → DNA → Protein", "Protein → RNA → DNA", "DNA → RNA → Protein", "DNA → Protein → RNA"], correct: "DNA → RNA → Protein" },
+            { question: "In which part of a eukaryotic cell does glycolysis occur?", answers: ["Mitochondrial matrix", "Nucleus", "Cytoplasm", "Endoplasmic reticulum"], correct: "Cytoplasm" },
+            { question: "Which of the following is a key difference between DNA and RNA?", answers: ["DNA contains uracil", "RNA is double-stranded", "RNA contains ribose sugar", "DNA has a phosphate group"], correct: "RNA contains ribose sugar" },
+            { question: "Fats, oils, and waxes are all classified as what type of macromolecule?", answers: ["Proteins", "Carbohydrates", "Nucleic Acids", "Lipids"], correct: "Lipids" },
+            { question: "On the pH scale, a solution with a pH of 3 is considered:", answers: ["Basic", "Neutral", "Acidic", "Alkaline"], correct: "Acidic" },
+            { question: "In the DNA double helix, the base Adenine (A) always pairs with which other base?", answers: ["Guanine (G)", "Cytosine (C)", "Thymine (T)", "Uracil (U)"], correct: "Thymine (T)" },
+            { question: "What are the monomers (building blocks) of proteins?", answers: ["Nucleotides", "Monosaccharides", "Fatty acids", "Amino acids"], correct: "Amino acids" },
+            // Biotechnology
+            { question: "What is the primary purpose of the Polymerase Chain Reaction (PCR) technique?", answers: ["To cut DNA", "To edit genes", "To amplify DNA", "To sequence DNA"], correct: "To amplify DNA" },
+            { question: "What acts as 'molecular scissors' to cut DNA at specific recognition sites in genetic engineering?", answers: ["DNA Ligase", "Helicase", "Restriction enzymes", "DNA Polymerase"], correct: "Restriction enzymes" },
+            { question: "Gel electrophoresis is a technique used to separate DNA fragments based on their:", answers: ["Sequence", "Charge", "Size", "Shape"], correct: "Size" },
+            { question: "The revolutionary gene-editing tool that acts like a 'find and replace' for DNA is known as:", answers: ["PCR", "CRISPR-Cas9", "Gel Electrophoresis", "Recombinant DNA"], correct: "CRISPR-Cas9" },
+            { question: "An organism that has had its genetic material altered using genetic engineering techniques is called a:", answers: ["Clone", "Hybrid", "Genetically Modified Organism (GMO)", "Vector"], correct: "Genetically Modified Organism (GMO)" },
+            { question: "In gene cloning, what is commonly used as a vector to carry a foreign gene into a host cell?", answers: ["A virus", "A chromosome", "A plasmid", "A protein"], correct: "A plasmid" },
+            { question: "What is the function of DNA Ligase in biotechnology?", answers: ["To unwind DNA", "To join DNA fragments together", "To synthesize RNA", "To destroy foreign DNA"], correct: "To join DNA fragments together" },
+            { question: "The production of human insulin by genetically engineered bacteria is a major application of:", answers: ["Gene therapy", "Recombinant DNA technology", "Forensic analysis", "DNA fingerprinting"], correct: "Recombinant DNA technology" },
+            { question: "The international research effort to determine the DNA sequence of the entire human genome was called the:", answers: ["CRISPR Project", "Human Genome Project", "Genomic Library Initiative", "Proteomics Project"], correct: "Human Genome Project" },
+            { question: "What does the 'R' in PCR stand for?", answers: ["Recombinant", "Restriction", "Replication", "Reaction"], correct: "Reaction" }
+        ];
+
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const warningOverlay = document.getElementById('warning-overlay');
+        const warningText = document.getElementById('warning-text');
+        
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+
+        const questionText = document.getElementById('question-text');
+        const questionNumber = document.getElementById('question-number');
+        const answerButtons = document.getElementById('answer-buttons');
+        const progressDots = document.getElementById('progress-dots');
+        const nameInput = document.getElementById('name-input');
+        const emailInput = document.getElementById('email-input');
+        const whatsappInput = document.getElementById('whatsapp-input');
+        const qualificationsInput = document.getElementById('qualifications-input');
+        const honorCodeCheckbox = document.getElementById('honor-code');
+        const scoreText = document.getElementById('score-text');
+        const timerEl = document.getElementById('timer');
+        const timeTakenEl = document.getElementById('time-taken');
+
+        let shuffledQuizData = [];
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let timerInterval;
+        let userName, userEmail, userWhatsapp, userQualifications;
+        let startTime;
+        let visibilityChangeCount = 0;
+        const maxVisibilityChanges = 2;
+        let quizEnded = false;
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        [nameInput, emailInput, whatsappInput, qualificationsInput, honorCodeCheckbox].forEach(input => {
+            input.addEventListener('input', validateInputs);
+        });
+
+        function validateInputs() {
+            const nameValid = nameInput.value.trim() !== '';
+            const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim());
+            const whatsappValid = /^\+?[0-9\s-]{7,15}$/.test(whatsappInput.value.trim());
+            const qualificationsValid = qualificationsInput.value.trim() !== '';
+            const honorCodeValid = honorCodeCheckbox.checked;
+
+            startBtn.disabled = !(nameValid && emailValid && whatsappValid && qualificationsValid && honorCodeValid);
+        }
+
+        function setupSecurityFeatures() {
+            // Disable context menu (right-click)
+            document.addEventListener('contextmenu', event => event.preventDefault());
+
+            // Disable copy, cut, paste
+            const disabledEvents = ['copy', 'cut', 'paste'];
+            disabledEvents.forEach(event => {
+                document.addEventListener(event, e => e.preventDefault());
+            });
+
+            // Tab-switching detection
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+        }
+
+        function handleVisibilityChange() {
+             if (document.hidden && !quizEnded) {
+                visibilityChangeCount++;
+                if (visibilityChangeCount > maxVisibilityChanges) {
+                    endQuiz(false, true); // Force end quiz
+                } else {
+                    warningText.textContent = `Leaving the quiz tab is not allowed. You have ${maxVisibilityChanges - visibilityChangeCount + 1} warning(s) left.`;
+                    warningOverlay.classList.remove('hidden');
+                }
+            } else {
+                warningOverlay.classList.add('hidden');
+            }
+        }
+
+        startBtn.addEventListener('click', startQuiz);
+        restartBtn.addEventListener('click', () => location.reload());
+        prevBtn.addEventListener('click', () => { currentQuestionIndex--; showQuestion(); });
+        nextBtn.addEventListener('click', () => { currentQuestionIndex++; showQuestion(); });
+        submitBtn.addEventListener('click', () => endQuiz(false, false));
+
+        function startQuiz() {
+            userName = nameInput.value.trim();
+            userEmail = emailInput.value.trim();
+            userWhatsapp = whatsappInput.value.trim();
+            userQualifications = qualificationsInput.value.trim();
+            
+            shuffledQuizData = shuffleArray([...quizData]);
+            userAnswers = new Array(shuffledQuizData.length).fill(null);
+            
+            startScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            
+            setupSecurityFeatures();
+            startTimer();
+            createProgressDots();
+            showQuestion();
+        }
+        
+        function startTimer() {
+            startTime = new Date();
+            let totalSeconds = 30 * 60;
+            timerInterval = setInterval(() => {
+                if (quizEnded) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                totalSeconds--;
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (totalSeconds <= 0) {
+                    endQuiz(true, false); // Time ran out
+                }
+            }, 1000);
+        }
+
+        function createProgressDots() {
+            progressDots.innerHTML = '';
+            shuffledQuizData.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.classList.add('h-2.5', 'w-2.5', 'rounded-full', 'bg-slate-300');
+                dot.dataset.index = index;
+                progressDots.appendChild(dot);
+            });
+        }
+
+        function showQuestion() {
+            const currentQuestion = shuffledQuizData[currentQuestionIndex];
+            questionNumber.textContent = currentQuestionIndex + 1;
+            questionText.textContent = currentQuestion.question;
+            
+            answerButtons.innerHTML = '';
+            const shuffledAnswers = shuffleArray([...currentQuestion.answers]);
+            shuffledAnswers.forEach(answer => {
+                const button = document.createElement('button');
+                button.textContent = answer;
+                button.classList.add('answer-btn', 'w-full', 'p-4', 'border-2', 'rounded-lg', 'text-left', 'bg-white', 'hover:bg-blue-50', 'hover:border-blue-400');
+                if (answer === userAnswers[currentQuestionIndex]) {
+                    button.classList.add('selected');
+                }
+                button.addEventListener('click', selectAnswer);
+                answerButtons.appendChild(button);
+            });
+            
+            updateNavigation();
+            updateProgressDots();
+        }
+        
+        function selectAnswer(e) {
+            const selectedButton = e.target;
+            const selectedAnswer = selectedButton.textContent;
+            userAnswers[currentQuestionIndex] = selectedAnswer;
+
+            Array.from(answerButtons.children).forEach(button => button.classList.remove('selected'));
+            selectedButton.classList.add('selected');
+        }
+
+        function updateNavigation() {
+            prevBtn.classList.toggle('hidden', currentQuestionIndex === 0);
+            nextBtn.classList.toggle('hidden', currentQuestionIndex === shuffledQuizData.length - 1);
+            submitBtn.classList.toggle('hidden', currentQuestionIndex !== shuffledQuizData.length - 1);
+        }
+        
+        function updateProgressDots() {
+            Array.from(progressDots.children).forEach((dot, index) => {
+                dot.classList.toggle('bg-blue-500', index === currentQuestionIndex);
+                dot.classList.toggle('bg-slate-300', index !== currentQuestionIndex);
+                if (userAnswers[index] !== null) {
+                   dot.classList.add('bg-green-500');
+                }
+            });
+        }
+
+        async function endQuiz(timeRanOut = false, forcedEnd = false) {
+            if (quizEnded) return;
+            quizEnded = true;
+
+            clearInterval(timerInterval);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            
+            let score = 0;
+            shuffledQuizData.forEach((question, index) => {
+                if (userAnswers[index] === question.correct) {
+                    score++;
+                }
+            });
+
+            const endTime = new Date();
+            const timeDiff = Math.round((endTime - startTime) / 1000);
+            const minutesSpent = Math.floor(timeDiff / 60);
+            const secondsSpent = timeDiff % 60;
+            const timeTakenString = `${minutesSpent}m ${secondsSpent}s`;
+            
+            try {
+                const submissionsCollection = collection(db, `/artifacts/${appId}/public/data/quiz_submissions`);
+                await addDoc(submissionsCollection, {
+                    name: userName,
+                    email: userEmail,
+                    whatsapp: userWhatsapp,
+                    qualifications: userQualifications,
+                    score: score,
+                    totalQuestions: shuffledQuizData.length,
+                    timeTaken: timeTakenString,
+                    submittedAt: new Date(),
+                    endedDueTo: forcedEnd ? 'Tab Switching' : (timeRanOut ? 'Time Ran Out' : 'User Submission')
+                });
+                console.log("Result saved to Firestore successfully!");
+            } catch (error) {
+                console.error("Error writing document: ", error);
+            }
+
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+
+            scoreText.textContent = `${score} / ${shuffledQuizData.length}`;
+
+            if (forcedEnd) {
+                timeTakenEl.textContent = "The quiz was ended due to switching tabs.";
+            } else if (timeRanOut) {
+                timeTakenEl.textContent = "Time's up! Your results have been submitted.";
+            } else {
+                timeTakenEl.textContent = `You finished in ${timeTakenString}. Your results have been submitted.`;
+            }
+        }
+    </script>
+</body>
+</html>
+
